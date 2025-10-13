@@ -5,7 +5,9 @@ from random import choice, randrange
 W, H = 10, 20
 TILE = int(45 * 0.8)
 GAME_RES = W * TILE, H * TILE
-RES = int(750 * 0.8), int(940 * 0.8)
+pygame.init()
+infoObject = pygame.display.Info()
+RES = infoObject.current_w - 10, infoObject.current_h - 55  # trừ viền nhỏ
 FPS = 60
 
 pygame.init()
@@ -28,7 +30,7 @@ figure_rect = pygame.Rect(0, 0, TILE - 2, TILE - 2)
 field = [[0 for i in range(W)] for j in range(H)]
 
 anim_count, anim_speed, anim_limit = 0, 60, 2000
-fast_drop_speed = 50
+fast_drop_speed = 1
 
 bg = pygame.image.load('./img/bg.jpg').convert()
 game_bg = pygame.image.load('./img/bg2.jpg').convert()
@@ -77,7 +79,8 @@ def set_record(record, score):
 while True:
     record = get_record()
     dx, rotate = 0, False
-    sc.blit(bg, (0, 0))
+    bg_full = pygame.transform.scale(bg, RES)
+    sc.blit(bg_full, (0, 0))
     sc.blit(game_sc, (int(20 * 0.8), int(20 * 0.8)))
     game_sc.blit(game_bg, (0, 0))
     # delay for full lines
