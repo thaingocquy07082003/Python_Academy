@@ -1,0 +1,27 @@
+[
+  {
+    "question": "Thủ đô của Việt Nam là gì?",
+    "options": ["Hà Nội", "TP. Hồ Chí Minh", "Đà Nẵng", "Cần Thơ"],
+    "answer": 0
+  },
+  {
+    "question": "2 + 2 bằng mấy?",
+    "options": ["3", "4", "5", "6"],
+    "answer": 1
+  },
+  {
+    "question": "Python là ngôn ngữ gì?",
+    "options": ["Cơ sở dữ liệu", "Ngôn ngữ lập trình", "Hệ điều hành", "Phần mềm"],
+    "answer": 1
+  },
+  {
+    "question": "1 năm có bao nhiêu tháng?",
+    "options": ["10", "11", "12", "13"],
+    "answer": 2
+  },
+  {
+    "question": "Màu của lá cây là gì?",
+    "options": ["Đỏ", "Vàng", "Xanh lá", "Xanh dương"],
+    "answer": 2
+  }
+]

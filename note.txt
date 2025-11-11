@@ -1,0 +1,8 @@
+xin chào
+
+Fullscreen instructions for `dino-runner`:
+- The game now starts in fullscreen by default.
+- Press F11 to toggle fullscreen on/off.
+- Press ESC to exit fullscreen (or quit if already windowed).
+
+If you want to start windowed by default, edit `setup_display(fullscreen=True)` in `dino-runner/main.py`.
