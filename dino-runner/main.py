@@ -285,6 +285,10 @@ def main():
     clock = pygame.time.Clock()
     # initialize display (start fullscreen)
     setup_display(fullscreen=True)
+    if not pygame.mixer.music.get_busy():
+        pygame.mixer.music.load("Assets/sounds/theme.mp3")
+        pygame.mixer.music.set_volume(0.5)  # âm lượng 0.0 → 1.0
+        pygame.mixer.music.play(-1)
     player = Dinosaur()
     cloud = Cloud()
     game_speed = 20
@@ -417,6 +421,7 @@ def main():
             if elapsed >= GAME_OVER_DELAY_MS:
                 # now show menu / handle death
                 gameover_sound.play()
+                pygame.mixer.music.stop()
                 menu(death_count)
                 return
         score()
