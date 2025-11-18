@@ -48,6 +48,13 @@ FULL_BG = pygame.transform.scale(FULL_BG, (SCREEN_WIDTH, SCREEN_HEIGHT))
 METEOR_SHOWER = pygame.image.load(os.path.join("Assets/Other", "meteor shower.png"))
 METEOR_SHOWER = pygame.transform.scale(METEOR_SHOWER, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
+jump_sound = pygame.mixer.Sound("Assets/sounds/sfx_wing.wav")
+jump_sound.set_volume(1.0)
+hit_sound = pygame.mixer.Sound("Assets/sounds/sfx_hit.wav")
+hit_sound.set_volume(1.0)
+gameover_sound = pygame.mixer.Sound("Assets/sounds/sfx_die.wav")
+gameover_sound.set_volume(1.0)
+
 DEBUG = False
 HITBOX_SCALE = 0.85
 
@@ -96,6 +103,7 @@ class Dinosaur:
             self.step_index = 0
 
         if userInput[pygame.K_SPACE] and not self.dino_jump:
+            jump_sound.play()
             self.dino_duck = False
             self.dino_run = False
             self.dino_jump = True
@@ -271,6 +279,8 @@ class Bird(Obstacle):
 
 def main():
     global game_speed, x_pos_bg, y_pos_bg, points, obstacles
+    meteor_x = 0
+    meteor_y = 0  
     run = True
     clock = pygame.time.Clock()
     # initialize display (start fullscreen)
@@ -328,10 +338,19 @@ def main():
     def draw_full_background():
         SCREEN.blit(FULL_BG, (0, 0))
 
-    def draw_meteor_shower():
-        SCREEN.blit(METEOR_SHOWER, (0, 0))
-    
+    def meteor_background():
+        nonlocal meteor_x, meteor_y
+        width = METEOR_SHOWER.get_width()
 
+        SCREEN.blit(METEOR_SHOWER, (meteor_x, meteor_y))
+        SCREEN.blit(METEOR_SHOWER, (meteor_x + width, meteor_y))
+        SCREEN.blit(METEOR_SHOWER, (meteor_x + width * 2, meteor_y))
+
+        meteor_x -= game_speed - 5 
+
+        if meteor_x <= -width:
+            meteor_x = 0
+    
     while run:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -347,7 +366,7 @@ def main():
         SCREEN.fill((255, 255, 255))
         userInput = pygame.key.get_pressed()
         draw_full_background()
-        draw_meteor_shower()
+        meteor_background()
         background()
         cloud.draw(SCREEN)
         cloud.update()
@@ -387,6 +406,7 @@ def main():
             if collided:
                 # start the game-over linger once (don't restart timer on further collisions)
                 if not game_over_pending:
+                    hit_sound.play()
                     game_over_pending = True
                     game_over_start = pygame.time.get_ticks()
                     death_count += 1
@@ -396,6 +416,7 @@ def main():
             elapsed = pygame.time.get_ticks() - game_over_start
             if elapsed >= GAME_OVER_DELAY_MS:
                 # now show menu / handle death
+                gameover_sound.play()
                 menu(death_count)
                 return
         score()
