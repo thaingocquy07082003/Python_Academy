@@ -3,8 +3,8 @@ import os
 import random
 pygame.init()
 
-SCREEN_HEIGHT = 600
-SCREEN_WIDTH = 1100
+SCREEN_HEIGHT = 1080
+SCREEN_WIDTH = 1920
 SCREEN = None
 
 IS_FULLSCREEN = False
@@ -17,36 +17,40 @@ def setup_display(fullscreen=False):
         SCREEN_WIDTH, SCREEN_HEIGHT = info.current_w, info.current_h
         SCREEN = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.FULLSCREEN)
     else:
-        # use default windowed size
         SCREEN_WIDTH = 1100
         SCREEN_HEIGHT = 600
         SCREEN = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     return SCREEN, (SCREEN_WIDTH, SCREEN_HEIGHT)
 
-RUNNING = [pygame.image.load(os.path.join("Assets/Dino", "DinoRun1.png")),
-           pygame.image.load(os.path.join("Assets/Dino", "DinoRun2.png"))]
-JUMPING = pygame.image.load(os.path.join("Assets/Dino", "DinoJump.png"))
-DUCKING = [pygame.image.load(os.path.join("Assets/Dino", "DinoDuck1.png")),
-           pygame.image.load(os.path.join("Assets/Dino", "DinoDuck2.png"))]
+RUNNING = [pygame.image.load(os.path.join("Assets/Dino", "robot fly 1.png")),
+           pygame.image.load(os.path.join("Assets/Dino", "robot fly 2.png"))]
+JUMPING = pygame.image.load(os.path.join("Assets/Dino", "robot jump 1.png"))
+DUCKING = [pygame.image.load(os.path.join("Assets/Dino", "robot fly 1.png")),
+           pygame.image.load(os.path.join("Assets/Dino", "robot fly 2.png"))]
 
-SMALL_CACTUS = [pygame.image.load(os.path.join("Assets/Cactus", "SmallCactus1.png")),
-                pygame.image.load(os.path.join("Assets/Cactus", "SmallCactus2.png")),
-                pygame.image.load(os.path.join("Assets/Cactus", "SmallCactus3.png"))]
-LARGE_CACTUS = [pygame.image.load(os.path.join("Assets/Cactus", "LargeCactus1.png")),
-                pygame.image.load(os.path.join("Assets/Cactus", "LargeCactus2.png")),
-                pygame.image.load(os.path.join("Assets/Cactus", "LargeCactus3.png"))]
+SMALL_CACTUS = [pygame.image.load(os.path.join("Assets/Cactus", "trap 1.png")),
+                pygame.image.load(os.path.join("Assets/Cactus", "trap 2.png")),
+                pygame.image.load(os.path.join("Assets/Cactus", "trap 3.png"))]
+LARGE_CACTUS = [pygame.image.load(os.path.join("Assets/Cactus", "trap 4.png")),
+                pygame.image.load(os.path.join("Assets/Cactus", "trap 5.png")),
+                pygame.image.load(os.path.join("Assets/Cactus", "trap 6.png"))]
 
-BIRD = [pygame.image.load(os.path.join("Assets/Bird", "Bird1.png")),
-        pygame.image.load(os.path.join("Assets/Bird", "Bird2.png"))]
+BIRD = [pygame.image.load(os.path.join("Assets/Bird", "planet 2.png")),
+        pygame.image.load(os.path.join("Assets/Bird", "planet 2.png"))]
 
-CLOUD = pygame.image.load(os.path.join("Assets/Other", "Cloud.png"))
+CLOUD = pygame.image.load(os.path.join("Assets/Other", "cloudy.png"))
+CLOUD = pygame.transform.scale(CLOUD, (180, 100))
 
-BG = pygame.image.load(os.path.join("Assets/Other", "Track.png"))
+BG = pygame.image.load(os.path.join("Assets/Other", "road.png"))
+
+FULL_BG = pygame.image.load(os.path.join("Assets/Other", "Background.png"))
+FULL_BG = pygame.transform.scale(FULL_BG, (SCREEN_WIDTH, SCREEN_HEIGHT))
+METEOR_SHOWER = pygame.image.load(os.path.join("Assets/Other", "meteor shower.png"))
+METEOR_SHOWER = pygame.transform.scale(METEOR_SHOWER, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
 DEBUG = False
-HITBOX_SCALE = 0.85  # scale factor for hitbox (90% of bounding rect)
+HITBOX_SCALE = 0.85
 
-# global fonts (used by main and menu)
 SCORE_FONT = pygame.font.Font('freesansbold.ttf', 48)
 SMALL_FONT = pygame.font.Font('freesansbold.ttf', 20)
 
@@ -91,7 +95,7 @@ class Dinosaur:
         if self.step_index >= 10:
             self.step_index = 0
 
-        if userInput[pygame.K_UP] and not self.dino_jump:
+        if userInput[pygame.K_SPACE] and not self.dino_jump:
             self.dino_duck = False
             self.dino_run = False
             self.dino_jump = True
@@ -275,7 +279,7 @@ def main():
     cloud = Cloud()
     game_speed = 20
     x_pos_bg = 0
-    y_pos_bg = 380
+    y_pos_bg = 175
     points = 0
     # use global fonts defined near module top
     global SCORE_FONT, SMALL_FONT
@@ -309,28 +313,32 @@ def main():
     def background():
         global x_pos_bg, y_pos_bg
         image_width = BG.get_width()
+
+        # Vẽ 3 lần để không bị hở
         SCREEN.blit(BG, (x_pos_bg, y_pos_bg))
-        SCREEN.blit(BG, (image_width + x_pos_bg, y_pos_bg))
-        if x_pos_bg <= -image_width:
-            SCREEN.blit(BG, (image_width + x_pos_bg, y_pos_bg))
-            x_pos_bg = 0
+        SCREEN.blit(BG, (x_pos_bg + image_width, y_pos_bg))
+        SCREEN.blit(BG, (x_pos_bg + image_width * 2, y_pos_bg))
+
         x_pos_bg -= game_speed
+
+        # Reset lại khi x_pos_bg đi hết 1 ảnh nền
+        if x_pos_bg <= -image_width:
+            x_pos_bg = 0
+
+    def draw_full_background():
+        SCREEN.blit(FULL_BG, (0, 0))
+
+    def draw_meteor_shower():
+        SCREEN.blit(METEOR_SHOWER, (0, 0))
+    
 
     while run:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
             if event.type == pygame.KEYDOWN:
-                # toggle debug overlay with D
-                if event.key == pygame.K_F11:
-                    # toggle fullscreen
-                    setup_display(fullscreen=not IS_FULLSCREEN)
                 if event.key == pygame.K_ESCAPE:
-                    # exit fullscreen if in fullscreen, otherwise quit
-                    if IS_FULLSCREEN:
-                        setup_display(fullscreen=False)
-                    else:
-                        run = False
+                    run = False
                 # toggle debug overlay with D
                 if event.key == pygame.K_d:
                     global DEBUG
@@ -338,7 +346,11 @@ def main():
 
         SCREEN.fill((255, 255, 255))
         userInput = pygame.key.get_pressed()
-
+        draw_full_background()
+        draw_meteor_shower()
+        background()
+        cloud.draw(SCREEN)
+        cloud.update()
         player.draw(SCREEN)
         player.update(userInput)
 
@@ -386,12 +398,6 @@ def main():
                 # now show menu / handle death
                 menu(death_count)
                 return
-
-        background()
-
-        cloud.draw(SCREEN)
-        cloud.update()
-
         score()
 
         clock.tick(30)
