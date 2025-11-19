@@ -2,25 +2,17 @@ import pygame
 import os
 import random
 pygame.init()
+info = pygame.display.Info()
+SCREEN_WIDTH = info.current_w
+SCREEN_HEIGHT = info.current_h
+window = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+info = pygame.display.Info()
+SCREEN_WIDTH = info.current_w
+SCREEN_HEIGHT = info.current_h
+SCREEN = window
+pygame.display.set_caption("Dino Runner")
 
-SCREEN_HEIGHT = 1080
-SCREEN_WIDTH = 1920
-SCREEN = None
 
-IS_FULLSCREEN = False
-
-def setup_display(fullscreen=False):
-    global SCREEN, SCREEN_WIDTH, SCREEN_HEIGHT, IS_FULLSCREEN
-    IS_FULLSCREEN = bool(fullscreen)
-    if IS_FULLSCREEN:
-        info = pygame.display.Info()
-        SCREEN_WIDTH, SCREEN_HEIGHT = info.current_w, info.current_h
-        SCREEN = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), pygame.FULLSCREEN)
-    else:
-        SCREEN_WIDTH = 1100
-        SCREEN_HEIGHT = 600
-        SCREEN = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
-    return SCREEN, (SCREEN_WIDTH, SCREEN_HEIGHT)
 
 RUNNING = [pygame.image.load(os.path.join("Assets/Dino", "robot fly 1.png")),
            pygame.image.load(os.path.join("Assets/Dino", "robot fly 2.png"))]
@@ -39,14 +31,13 @@ BIRD = [pygame.image.load(os.path.join("Assets/Bird", "planet 2.png")),
         pygame.image.load(os.path.join("Assets/Bird", "planet 2.png"))]
 
 CLOUD = pygame.image.load(os.path.join("Assets/Other", "cloudy.png"))
-CLOUD = pygame.transform.scale(CLOUD, (180, 100))
+CLOUD = pygame.transform.scale(CLOUD, (250, 150))
 
 BG = pygame.image.load(os.path.join("Assets/Other", "road.png"))
+BG = pygame.transform.scale(BG, (BG.get_width() * 750 // BG.get_height(), 750))
 
 FULL_BG = pygame.image.load(os.path.join("Assets/Other", "Background.png"))
-FULL_BG = pygame.transform.scale(FULL_BG, (SCREEN_WIDTH, SCREEN_HEIGHT))
 METEOR_SHOWER = pygame.image.load(os.path.join("Assets/Other", "meteor shower.png"))
-METEOR_SHOWER = pygame.transform.scale(METEOR_SHOWER, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
 jump_sound = pygame.mixer.Sound("Assets/sounds/sfx_wing.wav")
 jump_sound.set_volume(1.0)
@@ -56,17 +47,17 @@ gameover_sound = pygame.mixer.Sound("Assets/sounds/sfx_die.wav")
 gameover_sound.set_volume(1.0)
 
 DEBUG = False
-HITBOX_SCALE = 0.85
+HITBOX_SCALE = 0.5
 
 SCORE_FONT = pygame.font.Font('freesansbold.ttf', 48)
 SMALL_FONT = pygame.font.Font('freesansbold.ttf', 20)
 
 
 class Dinosaur:
-    X_POS = 80
-    Y_POS = 310
+    X_POS = 350
+    Y_POS = 480
     Y_POS_DUCK = 340
-    JUMP_VEL = 8.5
+    JUMP_VEL = 9.5
 
     def __init__(self):
         self.duck_img = DUCKING
@@ -102,7 +93,7 @@ class Dinosaur:
         if self.step_index >= 10:
             self.step_index = 0
 
-        if userInput[pygame.K_SPACE] and not self.dino_jump:
+        if userInput[pygame.K_RETURN] and not self.dino_jump:
             jump_sound.play()
             self.dino_duck = False
             self.dino_run = False
@@ -200,80 +191,107 @@ class Obstacle:
         self.image = image
         self.type = type
         self.rect = self.image[self.type].get_rect()
-        self.rect.x = SCREEN_WIDTH
-        # mask for pixel-perfect collision
+        
+        # Sử dụng float cho vị trí chính xác
+        self.pos_x = float(SCREEN_WIDTH)
+        self.pos_y = 0.0
+        
+        # Cập nhật rect ban đầu
+        self.rect.x = int(self.pos_x)
+        self.rect.y = int(self.pos_y)
+        
         try:
             self.mask = pygame.mask.from_surface(self.image[self.type])
-        except Exception:
+        except:
             self.mask = None
-        # create scaled hitbox
+
+        # Tạo hitbox
         w, h = self.rect.size
         hw, hh = int(w * HITBOX_SCALE), int(h * HITBOX_SCALE)
         self.hitbox = pygame.Rect(0, 0, hw, hh)
         self.hitbox.center = self.rect.center
 
     def update(self):
-        self.rect.x -= game_speed
-        if self.rect.x < -self.rect.width:
-            obstacles.pop()
+        # Cập nhật vị trí float (chính xác)
+        self.pos_x -= game_speed
+        
+        # Chỉ làm tròn khi gán vào rect để vẽ
+        self.rect.x = int(round(self.pos_x))
+        self.rect.y = int(round(self.pos_y))
+        
+        # Cập nhật hitbox theo vị trí mới
+        w, h = self.rect.size
+        hw, hh = int(w * HITBOX_SCALE), int(h * HITBOX_SCALE)
+        self.hitbox.width = hw
+        self.hitbox.height = hh
+        self.hitbox.center = self.rect.center
+        
+        # Xóa obstacle khi ra khỏi màn hình
+        if self.pos_x < -self.rect.width:
+            if self in obstacles:
+                obstacles.remove(self)
 
     def draw(self, SCREEN):
+        # Vẽ ở vị trí đã làm tròn từ rect
         SCREEN.blit(self.image[self.type], self.rect)
+        
+        # Debug visualization
         if DEBUG:
-            pygame.draw.rect(SCREEN, (0, 0, 255), self.rect, 1)
-            # draw hitbox
-            if hasattr(self, 'hitbox'):
-                pygame.draw.rect(SCREEN, (255, 165, 0), self.hitbox, 1)
-            if hasattr(self, 'mask') and self.mask is not None:
-                w, h = self.mask.get_size()
-                found = False
-                for yy in range(h):
-                    for xx in range(w):
-                        if self.mask.get_at((xx, yy)):
-                            pygame.draw.circle(SCREEN, (255, 165, 0), (self.rect.x + xx, self.rect.y + yy), 3)
-                            found = True
-                            break
-                    if found:
-                        break
+            pygame.draw.rect(SCREEN, (0, 255, 0), self.rect, 1)
+            pygame.draw.rect(SCREEN, (255, 0, 255), self.hitbox, 1)
 
 
 class SmallCactus(Obstacle):
     def __init__(self, image):
         self.type = random.randint(0, 2)
         super().__init__(image, self.type)
-        self.rect.y = 325
+        self.pos_y = 500.0
+        self.rect.y = 500
 
 
 class LargeCactus(Obstacle):
     def __init__(self, image):
         self.type = random.randint(0, 2)
         super().__init__(image, self.type)
-        self.rect.y = 300
+        self.pos_y = 475.0
+        self.rect.y = 475
 
 
 class Bird(Obstacle):
     def __init__(self, image):
         self.type = 0
         super().__init__(image, self.type)
-        self.rect.y = 250
+        self.pos_y = 400.0
+        self.rect.y = 400
         self.index = 0
 
     def draw(self, SCREEN):
         if self.index >= 9:
             self.index = 0
-        current_image = self.image[self.index//5]
+        
+        current_image = self.image[self.index // 5]
+        
+        # Vẽ ở vị trí rect
         SCREEN.blit(current_image, self.rect)
-        # update mask for current bird frame
+        
+        # Cập nhật mask cho frame hiện tại
         try:
             self.mask = pygame.mask.from_surface(current_image)
         except Exception:
             self.mask = None
-        # update hitbox
-        if hasattr(self, 'hitbox'):
-            w, h = self.rect.size
-            hw, hh = int(w * HITBOX_SCALE), int(h * HITBOX_SCALE)
-            self.hitbox.size = (hw, hh)
-            self.hitbox.center = self.rect.center
+        
+        # Cập nhật hitbox
+        w, h = self.rect.size
+        hw, hh = int(w * HITBOX_SCALE), int(h * HITBOX_SCALE)
+        self.hitbox.width = hw
+        self.hitbox.height = hh
+        self.hitbox.center = self.rect.center
+        
+        # Debug visualization
+        if DEBUG:
+            pygame.draw.rect(SCREEN, (0, 255, 0), self.rect, 1)
+            pygame.draw.rect(SCREEN, (255, 0, 255), self.hitbox, 1)
+        
         self.index += 1
 
 
@@ -283,15 +301,13 @@ def main():
     meteor_y = 0  
     run = True
     clock = pygame.time.Clock()
-    # initialize display (start fullscreen)
-    setup_display(fullscreen=True)
     if not pygame.mixer.music.get_busy():
         pygame.mixer.music.load("Assets/sounds/theme.mp3")
         pygame.mixer.music.set_volume(0.5)  # âm lượng 0.0 → 1.0
         pygame.mixer.music.play(-1)
     player = Dinosaur()
     cloud = Cloud()
-    game_speed = 20
+    game_speed = 10
     x_pos_bg = 0
     y_pos_bg = 175
     points = 0
@@ -311,7 +327,7 @@ def main():
         global points, game_speed
         points += 1
         if points % 100 == 0:
-            game_speed += 1
+            game_speed += 0.5
 
         # draw the current score centered at the top
         try:
@@ -350,7 +366,7 @@ def main():
         SCREEN.blit(METEOR_SHOWER, (meteor_x + width, meteor_y))
         SCREEN.blit(METEOR_SHOWER, (meteor_x + width * 2, meteor_y))
 
-        meteor_x -= game_speed - 5 
+        meteor_x -= 5 
 
         if meteor_x <= -width:
             meteor_x = 0
@@ -366,7 +382,6 @@ def main():
                 if event.key == pygame.K_d:
                     global DEBUG
                     DEBUG = not DEBUG
-
         SCREEN.fill((255, 255, 255))
         userInput = pygame.key.get_pressed()
         draw_full_background()
@@ -426,7 +441,7 @@ def main():
                 return
         score()
 
-        clock.tick(30)
+        clock.tick(90)
         pygame.display.update()
 
 
@@ -460,7 +475,20 @@ def menu(death_count):
                 main()
 
 
+def scale_cover(image, target_w, target_h):
+    img_w, img_h = image.get_size()
+    scale = max(target_w / img_w, target_h / img_h)
+    new_w = int(img_w * scale)
+    new_h = int(img_h * scale)
+    scaled = pygame.transform.smoothscale(image, (new_w, new_h))
+    x = (new_w - target_w) // 2
+    y = (new_h - target_h) // 2
+    cropped = scaled.subsurface((x, y, target_w, target_h))
+    return cropped
+
+
 if __name__ == '__main__':
     # initialize display and start the menu (start in fullscreen)
-    setup_display(fullscreen=True)
+    FULL_BG = scale_cover(FULL_BG, SCREEN_WIDTH, SCREEN_HEIGHT)
+    METEOR_SHOWER = scale_cover(METEOR_SHOWER, SCREEN_WIDTH, SCREEN_HEIGHT)
     menu(death_count=0)
