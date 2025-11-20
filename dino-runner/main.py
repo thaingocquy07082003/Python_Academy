@@ -248,7 +248,6 @@ class Bird(Obstacle):
         self.index = 0
 
     def update(self, speed, delta):
-        # giữ logic di chuyển từ Obstacle
         return super().update(speed, delta)
 
     def draw(self, SCREEN):
@@ -293,7 +292,7 @@ def main():
         global points, game_speed
         points += 1
         if points % 100 == 0:
-            game_speed += 0.1
+            game_speed += 3
 
         text = SCORE_FONT.render(str(points), True, (0, 0, 0))
         textRect = text.get_rect()
@@ -304,12 +303,9 @@ def main():
         global x_pos_bg
         image_width = BG.get_width()
 
-        # Vẽ 2 lần để cover màn hình
         SCREEN.blit(BG, (x_pos_bg, y_pos_bg))
         SCREEN.blit(BG, (x_pos_bg + image_width, y_pos_bg))
         SCREEN.blit(BG, (x_pos_bg + image_width*2, y_pos_bg))
-
-        # di chuyển theo delta
         x_pos_bg -= game_speed * delta
 
         if x_pos_bg <= -image_width:
@@ -322,7 +318,6 @@ def main():
         SCREEN.blit(METEOR_SHOWER, (0, 0))
 
     while run:
-        # tick ở đầu vòng lặp để dt tính chính xác trước update
         dt = clock.tick(60)  # giữ tối đa 60 FPS, dt là ms elapsed
         delta = dt / 16.67   # hệ số trên chuẩn 60 FPS (16.67 ms)
 
@@ -340,14 +335,12 @@ def main():
         SCREEN.fill((255, 255, 255))
         userInput = pygame.key.get_pressed()
 
-        # Vẽ backgrounds
         draw_full_background()
         meteor_background()
         background(delta)
 
-        # Cloud (mượt)
         cloud.draw(SCREEN)
-        cloud.update(game_speed * 0.5, delta)  # Cloud chậm hơn
+        cloud.update(game_speed * 0.5, delta)  
 
         # Player
         player.draw(SCREEN)
@@ -392,8 +385,6 @@ def main():
                 return
 
         score()
-
-        # cập nhật hiển thị (đã tick đầu vòng)
         pygame.display.update()
 
 
