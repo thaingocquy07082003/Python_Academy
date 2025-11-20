@@ -62,7 +62,7 @@ class Dinosaur:
     X_POS = 350
     Y_POS = 480
     Y_POS_DUCK = 340
-    JUMP_VEL = 32
+    JUMP_VEL = 36
 
     def __init__(self):
         self.duck_img = DUCKING
@@ -186,7 +186,7 @@ class Obstacle:
         self.pos_x = float(SCREEN_WIDTH)
         self.pos_y = 0.0
         
-        self.rect.x = int(self.pos_x)
+        self.rect.x = self.pos_x
         self.rect.y = int(self.pos_y)
 
         # Tạo hitbox CỐ ĐỊNH size (chỉ tính 1 lần)
@@ -196,12 +196,11 @@ class Obstacle:
         self.hitbox = pygame.Rect(0, 0, self.hitbox_w, self.hitbox_h)
         self.hitbox.center = self.rect.center
 
-    def update(self, speed):
-        # Cập nhật vị trí float
-        self.pos_x -= speed
-        
+    def update(self, speed,clock):
+        delta = clock.get_time() / 40
+        self.pos_x -= speed * delta 
         # Làm tròn khi vẽ
-        self.rect.x = int(self.pos_x)
+        self.rect.x = self.pos_x
         self.rect.y = int(self.pos_y)
         
         # CHỈ cập nhật vị trí hitbox (không tính lại size)
@@ -270,7 +269,7 @@ def main():
     player = Dinosaur()
     cloud = Cloud()
     
-    game_speed = 15
+    game_speed = 13
     x_pos_bg = 0.0
     y_pos_bg = 15
     points = 0
@@ -286,7 +285,7 @@ def main():
         global points, game_speed
         points += 1
         if points % 100 == 0:
-            game_speed += 3  # Tăng từ từ thay vì +1
+            game_speed += 0.1  
         
         text = SCORE_FONT.render(str(points), True, (0, 0, 0))
         textRect = text.get_rect()
@@ -298,10 +297,10 @@ def main():
         image_width = BG.get_width()
 
         # Chỉ vẽ 2 lần (đủ để cover màn hình)
-        SCREEN.blit(BG, (int(x_pos_bg), y_pos_bg))
-        SCREEN.blit(BG, (int(x_pos_bg + image_width), y_pos_bg))
+        SCREEN.blit(BG, (x_pos_bg, y_pos_bg))
+        SCREEN.blit(BG, (x_pos_bg + image_width, y_pos_bg))
 
-        x_pos_bg -= game_speed
+        x_pos_bg -= 10
 
         if x_pos_bg <= -image_width:
             x_pos_bg = 0.0
@@ -342,7 +341,7 @@ def main():
         if (not game_over_pending) and frame_counter >= next_spawn_time:
             rand = random.randint(0, 2)
             frame_counter = 0
-            next_spawn_time = 27
+            next_spawn_time = 20
             if rand == 0:
                 obstacles.append(SmallCactus(SMALL_CACTUS))
             elif rand == 1:
@@ -353,7 +352,7 @@ def main():
         # Update và check collision
         for obstacle in list(obstacles):
             obstacle.draw(SCREEN)
-            should_remove = obstacle.update(game_speed)
+            should_remove = obstacle.update(game_speed,clock)
             
             if should_remove:
                 obstacles.remove(obstacle)
@@ -378,7 +377,7 @@ def main():
         
         score()
 
-        clock.tick(120)  # Giữ 60 FPS
+        clock.tick(60)  # Giữ 60 FPS
         pygame.display.update()
 
 
