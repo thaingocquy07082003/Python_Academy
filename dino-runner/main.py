@@ -1,8 +1,9 @@
 import pygame
 import os
 import random
+pygame.mixer.pre_init(44100, -16, 2, 512)
 pygame.init()
-
+pygame.mixer.init()
 info = pygame.display.Info()
 SCREEN_WIDTH = info.current_w
 SCREEN_HEIGHT = info.current_h
@@ -16,8 +17,8 @@ pygame.display.set_caption("Dino Runner")
 def scale_x2(images):
     # Dùng cho các list hình ảnh (RUNNING, DUCKING, SMALL_CACTUS, LARGE_CACTUS, BIRD)
     if isinstance(images, list):
-        return [pygame.transform.scale(img, (int(img.get_width() * 1.3), int(img.get_height() * 1.3))) for img in images]
-    return pygame.transform.scale(images, (int(images.get_width() * 1.3), int(images.get_height() * 1.3)))
+        return [pygame.transform.scale(img, (int(img.get_width() * 1), int(img.get_height() * 1))) for img in images]
+    return pygame.transform.scale(images, (int(images.get_width() * 1), int(images.get_height() * 1)))
 
 RUNNING = scale_x2([pygame.image.load(os.path.join("Assets/Dino", "robot fly 1.png")),
                     pygame.image.load(os.path.join("Assets/Dino", "robot fly 2.png"))])
@@ -33,15 +34,15 @@ LARGE_CACTUS = scale_x2([pygame.image.load(os.path.join("Assets/Cactus", "trap 4
                          pygame.image.load(os.path.join("Assets/Cactus", "trap 5.png")),
                          pygame.image.load(os.path.join("Assets/Cactus", "trap 6.png"))])
 
-BIRD = scale_x2([pygame.image.load(os.path.join("Assets/Bird", "planet 2.png")),
-                 pygame.image.load(os.path.join("Assets/Bird", "planet 2.png"))])
+BIRD = scale_x2([pygame.image.load(os.path.join("Assets/Bird", "Bird1.png")),
+                 pygame.image.load(os.path.join("Assets/Bird", "Bird2.png"))])
 
 CLOUD = pygame.image.load(os.path.join("Assets/Other", "cloudy.png"))
 CLOUD = pygame.transform.scale(CLOUD, (250, 150))
 
 BG = pygame.image.load(os.path.join("Assets/Other", "road.png"))
 # giảm kích thước BG quá lớn — scale theo chiều cao 200 px (bạn có thể điều chỉnh)
-BG = pygame.transform.scale(BG, (int(BG.get_width() * (400 / BG.get_height())), 400))
+BG = pygame.transform.scale(BG, (int(BG.get_width() * (600 / BG.get_height())), 600))
 
 FULL_BG = pygame.image.load(os.path.join("Assets/Other", "Background.png"))
 METEOR_SHOWER = pygame.image.load(os.path.join("Assets/Other", "meteor shower.png"))
@@ -54,7 +55,7 @@ gameover_sound = pygame.mixer.Sound("Assets/sounds/sfx_die.wav")
 gameover_sound.set_volume(1.0)
 
 DEBUG = False
-HITBOX_SCALE = 0.6  # Tăng lên để collision dễ hơn
+HITBOX_SCALE = 0.7  # Tăng lên để collision dễ hơn
 
 SCORE_FONT = pygame.font.Font('freesansbold.ttf', 48)
 SMALL_FONT = pygame.font.Font('freesansbold.ttf', 20)
@@ -64,7 +65,7 @@ class Dinosaur:
     X_POS = 350
     Y_POS = 480
     Y_POS_DUCK = 340
-    JUMP_VEL = 35
+    JUMP_VEL = 28
 
     def __init__(self):
         self.duck_img = DUCKING
@@ -144,8 +145,8 @@ class Dinosaur:
     def jump(self, delta):
         self.image = self.jump_img
         # dùng delta để mượt (sub-pixel)
-        self.y_pos -= self.jump_vel * delta
-        self.jump_vel -= 3.2 * delta
+        self.y_pos -= self.jump_vel * delta * 0.9
+        self.jump_vel -= 2.0 * delta
 
         # cập nhật rect (ép int cho draw/hitbox)
         self.dino_rect.y = int(self.y_pos)
@@ -276,9 +277,9 @@ def main():
     player = Dinosaur()
     cloud = Cloud()
 
-    game_speed = 13.0
+    game_speed = 7
     x_pos_bg = 0.0
-    y_pos_bg = 380
+    y_pos_bg = 255
     points = 0
 
     obstacles = []
@@ -292,7 +293,7 @@ def main():
         global points, game_speed
         points += 1
         if points % 100 == 0:
-            game_speed += 3
+            game_speed += 0.1
 
         text = SCORE_FONT.render(str(points), True, (0, 0, 0))
         textRect = text.get_rect()
@@ -304,12 +305,11 @@ def main():
         image_width = BG.get_width()
 
         SCREEN.blit(BG, (x_pos_bg, y_pos_bg))
-        SCREEN.blit(BG, (x_pos_bg + image_width, y_pos_bg))
-        SCREEN.blit(BG, (x_pos_bg + image_width*2, y_pos_bg))
-        x_pos_bg -= game_speed * delta
+        # SCREEN.blit(BG, (x_pos_bg + image_width, y_pos_bg))
+        # x_pos_bg -= game_speed * delta
 
-        if x_pos_bg <= -image_width:
-            x_pos_bg = 0.0
+        # if x_pos_bg <= -image_width:
+        #     x_pos_bg = 0.0
 
     def draw_full_background():
         SCREEN.blit(FULL_BG, (0, 0))
@@ -318,7 +318,7 @@ def main():
         SCREEN.blit(METEOR_SHOWER, (0, 0))
 
     while run:
-        dt = clock.tick(60)  # giữ tối đa 60 FPS, dt là ms elapsed
+        dt = clock.tick(120)  # giữ tối đa 60 FPS, dt là ms elapsed
         delta = dt / 16.67   # hệ số trên chuẩn 60 FPS (16.67 ms)
 
         frame_counter += 1
@@ -350,9 +350,9 @@ def main():
         if (not game_over_pending) and frame_counter >= next_spawn_time:
             rand = random.randint(0, 2)
             frame_counter = 0
-            next_spawn_time = random.randint(18, 30)
+            next_spawn_time = 20
             if rand == 0:
-                obstacles.append(SmallCactus(SMALL_CACTUS))
+                obstacles.append(SmallCactus(SMALL_CACTUS)) 
             elif rand == 1:
                 obstacles.append(LargeCactus(LARGE_CACTUS))
             else:
