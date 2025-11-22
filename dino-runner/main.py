@@ -5,12 +5,10 @@ pygame.mixer.pre_init(44100, -16, 2, 512)
 pygame.init()
 pygame.mixer.init()
 info = pygame.display.Info()
-SCREEN_WIDTH = info.current_w
-SCREEN_HEIGHT = info.current_h
-window = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 800
 info = pygame.display.Info()
-SCREEN_WIDTH = info.current_w
-SCREEN_HEIGHT = info.current_h
+window = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 SCREEN = window
 pygame.display.set_caption("Dino Runner")
 
@@ -318,8 +316,11 @@ def main():
         SCREEN.blit(METEOR_SHOWER, (0, 0))
 
     while run:
-        dt = clock.tick(120)  # giữ tối đa 60 FPS, dt là ms elapsed
-        delta = dt / 16.67   # hệ số trên chuẩn 60 FPS (16.67 ms)
+        dt = clock.tick(90
+                        
+                        
+                        )  # giữ tối đa 60 FPS, dt là ms elapsed
+        delta = dt / 24   # hệ số trên chuẩn 60 FPS (16.67 ms)
 
         frame_counter += 1
         for event in pygame.event.get():
@@ -350,7 +351,7 @@ def main():
         if (not game_over_pending) and frame_counter >= next_spawn_time:
             rand = random.randint(0, 2)
             frame_counter = 0
-            next_spawn_time = 20
+            next_spawn_time = 80
             if rand == 0:
                 obstacles.append(SmallCactus(SMALL_CACTUS)) 
             elif rand == 1:
