@@ -5,15 +5,14 @@ pygame.mixer.pre_init(44100, -16, 2, 512)
 pygame.init()
 pygame.mixer.init()
 info = pygame.display.Info()
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 800
+SCREEN_WIDTH = 1600     # 800 , 800  
+SCREEN_HEIGHT = 880
 info = pygame.display.Info()
 window = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 SCREEN = window
 pygame.display.set_caption("Dino Runner")
 
 def scale_x2(images):
-    # Dùng cho các list hình ảnh (RUNNING, DUCKING, SMALL_CACTUS, LARGE_CACTUS, BIRD)
     if isinstance(images, list):
         return [pygame.transform.scale(img, (int(img.get_width() * 1), int(img.get_height() * 1))) for img in images]
     return pygame.transform.scale(images, (int(images.get_width() * 1), int(images.get_height() * 1)))
@@ -24,7 +23,6 @@ JUMPING = scale_x2(pygame.image.load(os.path.join("Assets/Dino", "robot jump 1.p
 DUCKING = scale_x2([pygame.image.load(os.path.join("Assets/Dino", "robot fly 1.png")),
                     pygame.image.load(os.path.join("Assets/Dino", "robot fly 2.png"))])
 
-# Thay đổi Kích thước Chướng ngại vật
 SMALL_CACTUS = scale_x2([pygame.image.load(os.path.join("Assets/Cactus", "trap 1.png")),
                          pygame.image.load(os.path.join("Assets/Cactus", "trap 2.png")),
                          pygame.image.load(os.path.join("Assets/Cactus", "trap 3.png"))])
@@ -39,7 +37,7 @@ CLOUD = pygame.image.load(os.path.join("Assets/Other", "cloudy.png"))
 CLOUD = pygame.transform.scale(CLOUD, (250, 150))
 
 BG = pygame.image.load(os.path.join("Assets/Other", "road.png"))
-# giảm kích thước BG quá lớn — scale theo chiều cao 200 px (bạn có thể điều chỉnh)
+# giảm kích thước BG quá lớn — scale theo chiều cao 600 px (bạn có thể điều chỉnh)
 BG = pygame.transform.scale(BG, (int(BG.get_width() * (600 / BG.get_height())), 600))
 
 FULL_BG = pygame.image.load(os.path.join("Assets/Other", "Background.png"))
@@ -53,7 +51,8 @@ gameover_sound = pygame.mixer.Sound("Assets/sounds/sfx_die.wav")
 gameover_sound.set_volume(1.0)
 
 DEBUG = False
-HITBOX_SCALE = 0.7  # Tăng lên để collision dễ hơn
+HITBOX_SCALE = 0.7
+  # Tăng lên để collision dễ hơn
 
 SCORE_FONT = pygame.font.Font('freesansbold.ttf', 48)
 SMALL_FONT = pygame.font.Font('freesansbold.ttf', 20)
@@ -124,7 +123,7 @@ class Dinosaur:
         self.image = self.duck_img[self.step_index // 5]
         self.dino_rect = self.image.get_rect()
         self.dino_rect.x = int(self.x_pos)
-        self.dino_rect.y = int(self.Y_POS_DUCK)   # cúi thì y cao hơn (hạ thấp nhân vật)
+        self.dino_rect.y = int(self.Y_POS_DUCK)
 
         self.y_pos = float(self.Y_POS_DUCK)
         self.hitbox.center = self.dino_rect.center
@@ -188,7 +187,7 @@ class Obstacle:
         self.current_image = self.image[self.type]
         self.rect = self.current_image.get_rect()
 
-        # Float position cho smooth movement
+        # vị trí
         self.pos_x = float(SCREEN_WIDTH)
         self.pos_y = 0.0
 
@@ -204,14 +203,12 @@ class Obstacle:
         self.hitbox.center = self.rect.center
 
     def update(self, speed, delta):
-        # Cập nhật vị trí float
+        # cập nhật vị trí 
         self.pos_x -= speed * delta
-
-        # cập nhật rect từ float (để blit mượt, cho phép float)
         self.rect.x = int(self.pos_x)  # rect requires ints for hitbox/rect, cast here for consistency
         self.rect.y = int(self.pos_y)
 
-        # CHỈ cập nhật vị trí hitbox (không tính lại size)
+        # chỉ cập nhật hitbox center không chỉnh lại size 
         self.hitbox.center = (int(self.rect.centerx), int(self.rect.centery))
 
         return self.pos_x < -self.rect.width
@@ -259,7 +256,7 @@ class Bird(Obstacle):
             pygame.draw.rect(SCREEN, (255, 0, 255), self.hitbox, 2)
         self.index += 1
 
-
+highest_score = 0
 def main():
     global game_speed, x_pos_bg, y_pos_bg, points, obstacles
     run = True
@@ -275,7 +272,7 @@ def main():
     player = Dinosaur()
     cloud = Cloud()
 
-    game_speed = 7
+    game_speed = 10
     x_pos_bg = 0.0
     y_pos_bg = 255
     points = 0
@@ -291,7 +288,7 @@ def main():
         global points, game_speed
         points += 1
         if points % 100 == 0:
-            game_speed += 0.1
+            game_speed += 0.2
 
         text = SCORE_FONT.render(str(points), True, (0, 0, 0))
         textRect = text.get_rect()
@@ -303,11 +300,6 @@ def main():
         image_width = BG.get_width()
 
         SCREEN.blit(BG, (x_pos_bg, y_pos_bg))
-        # SCREEN.blit(BG, (x_pos_bg + image_width, y_pos_bg))
-        # x_pos_bg -= game_speed * delta
-
-        # if x_pos_bg <= -image_width:
-        #     x_pos_bg = 0.0
 
     def draw_full_background():
         SCREEN.blit(FULL_BG, (0, 0))
@@ -316,11 +308,8 @@ def main():
         SCREEN.blit(METEOR_SHOWER, (0, 0))
 
     while run:
-        dt = clock.tick(90
-                        
-                        
-                        )  # giữ tối đa 60 FPS, dt là ms elapsed
-        delta = dt / 24   # hệ số trên chuẩn 60 FPS (16.67 ms)
+        dt = clock.tick(90) # max 60 FPS
+        delta = dt / 24
 
         frame_counter += 1
         for event in pygame.event.get():
@@ -342,16 +331,14 @@ def main():
 
         cloud.draw(SCREEN)
         cloud.update(game_speed * 0.5, delta)  
-
-        # Player
         player.draw(SCREEN)
         player.update(userInput, delta)
 
-        # Spawn obstacles
+        # chướng ngại vật
         if (not game_over_pending) and frame_counter >= next_spawn_time:
             rand = random.randint(0, 2)
             frame_counter = 0
-            next_spawn_time = 80
+            next_spawn_time = 30  # 55
             if rand == 0:
                 obstacles.append(SmallCactus(SMALL_CACTUS)) 
             elif rand == 1:
@@ -359,7 +346,7 @@ def main():
             else:
                 obstacles.append(Bird(BIRD))
 
-        # Update và check collision
+        # Cập nhật và kiểm tra va chạm
         for obstacle in list(obstacles):
             obstacle.draw(SCREEN)
             should_remove = obstacle.update(game_speed, delta)
@@ -367,15 +354,12 @@ def main():
             if should_remove:
                 obstacles.remove(obstacle)
                 continue
-
-            # Collision detection với hitbox
             if player.hitbox.colliderect(obstacle.hitbox):
                 if not game_over_pending:
                     hit_sound.play()
                     game_over_pending = True
                     game_over_start = pygame.time.get_ticks()
                     death_count += 1
-
         # Check game over
         if game_over_pending:
             elapsed = pygame.time.get_ticks() - game_over_start
@@ -390,7 +374,7 @@ def main():
 
 
 def menu(death_count):
-    global points
+    global points,highest_score
     run = True
     while run:
         SCREEN.fill((255, 255, 255))
@@ -399,8 +383,14 @@ def menu(death_count):
         if death_count == 0:
             text = font.render("Press any Key to Start", True, (0, 0, 0))
         else:
+            if points > highest_score:
+                highest_score = points
             text = font.render("Press any Key to Restart", True, (0, 0, 0))
             score_text = SCORE_FONT.render("Your Score: " + str(points), True, (0, 0, 0))
+            high_score_text = SCORE_FONT.render("Highest Score: " + str(highest_score), True, (0, 0, 0))
+            high_scoreRect = high_score_text.get_rect()
+            high_scoreRect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 100)
+            SCREEN.blit(high_score_text, high_scoreRect)
             scoreRect = score_text.get_rect()
             scoreRect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + 50)
             SCREEN.blit(score_text, scoreRect)
